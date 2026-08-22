@@ -9,7 +9,7 @@ NUM_FECHA = 6
 st.set_page_config(page_title=f"Scouting Gran DT Avanzado - Fecha {NUM_FECHA}", layout="wide")
 st.title(f"⚽ Motor de Scouting Avanzado & Armado Táctico - Fecha {NUM_FECHA}")
 
-# --- FUNCIÓN DE ESTILIZADO (COLORES) ---
+# --- FUNCIÓN DE ESTILIZADO (COLORES Y ENTEROS) ---
 def aplicar_colores(val):
     try:
         score = float(val)
@@ -23,7 +23,8 @@ def aplicar_colores(val):
 
 def estilizar_dataframe(df):
     fecha_cols = [c for c in df.columns if c.lower().startswith('f')]
-    return df.style.map(aplicar_colores, subset=fecha_cols)
+    # Aplicamos colores y forzamos el formato de número entero sin decimales en la visualización
+return df.style.map(aplicar_colores, subset=fecha_cols).format({col: "{:.0f}" for col in fecha_cols if col in df.columns}, na_rep="0")
 
 # --- FUNCIONES DE LIMPIEZA ---
 def clean_google_sheet_url(url):
@@ -122,7 +123,8 @@ def procesar_jugadores(url, pos):
     res = pd.DataFrame({'Jugador': df[col_j], 'Equipo': df[col_e], 'Pos': pos})
     for col in df.columns:
         if col.lower().startswith('f'):
-            res[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
+            # Convertimos a número, rellenamos con 0 y forzamos a entero (int)
+            res[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce').fillna(0).astype(int)
     return res
 
 if st.button("🚀 Procesar Datos y Actualizar Scouting"):
@@ -145,7 +147,7 @@ if 'df_full' in st.session_state:
     tabs = st.tabs([f"👕 Armado Táctico", "🧤 ARQ", "🛡️ DEF", "👟 VOL", "⚽ DEL", "📊 Ranking General"])
     
     with tabs[0]: # Armado Táctico
-        st.dataframe(estilizar_dataframe(df_full.head(15)), use_container_width=True) # Ejemplo simple
+        st.dataframe(estilizar_dataframe(df_full.head(15)), use_container_width=True)
 
     posiciones = ["ARQ", "DEF", "VOL", "DEL"]
     for i, pos in enumerate(posiciones):
