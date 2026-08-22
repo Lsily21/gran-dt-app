@@ -9,7 +9,7 @@ NUM_FECHA = 6
 st.set_page_config(page_title=f"Scouting Gran DT Avanzado - Fecha {NUM_FECHA}", layout="wide")
 st.title(f"⚽ Motor de Scouting Avanzado & Armado Táctico - Fecha {NUM_FECHA}")
 
-# --- FUNCIÓN DE ESTILIZADO (COLORES Y ENTEROS) ---
+# --- FUNCIÓN DE ESTILIZADO (COLORES Y FORMATOS) ---
 def aplicar_colores(val):
     try:
         score = float(val)
@@ -23,8 +23,12 @@ def aplicar_colores(val):
 
 def estilizar_dataframe(df):
     fecha_cols = [c for c in df.columns if c.lower().startswith('f')]
-    # Aplicamos colores y forzamos a entero sin decimales
-    return df.style.map(aplicar_colores, subset=fecha_cols).format({col: "{:.0f}" for col in fecha_cols if col in df.columns}, na_rep="0")
+    format_dict = {col: "{:.0f}" for col in fecha_cols if col in df.columns}
+    
+    if 'AcT' in df.columns: format_dict['AcT'] = "{:.0f}"
+    if 'PrT' in df.columns: format_dict['PrT'] = "{:g}" # {:g} elimina ceros de más a la derecha
+        
+    return df.style.map(aplicar_colores, subset=fecha_cols).format(format_dict, na_rep="0")
 
 # --- FUNCIONES DE LIMPIEZA ---
 def clean_google_sheet_url(url):
@@ -150,7 +154,6 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
             if not df_p.empty: lista_jugadores.append(df_p)
     df_full = pd.concat(lista_jugadores, ignore_index=True)
     
-    # Cruces para traer rivales y goles
     df_full['Equipo_key'] = df_full['Equipo'].apply(normalizar_nombre)
     df_fix['Equipo_key'] = df_fix['Equipo'].apply(normalizar_nombre)
     df_full = df_full.merge(df_fix[['Equipo_key', 'Rival']], on='Equipo_key', how='left').fillna('Libre / S/D')
@@ -177,7 +180,7 @@ if 'df_full' in st.session_state:
     df_full = st.session_state['df_full']
     tabs = st.tabs([f"👕 Armado Táctico", "🧤 ARQ", "🛡️ DEF", "👟 VOL", "⚽ DEL", "📊 Ranking General"])
     
-    with tabs[0]: # Armado Táctico
+    with tabs[0]: 
         st.subheader(f"Plantel Ideal (15 Jugadores) - Esquema: {esquema_elegido} - Fecha {NUM_FECHA}")
         esquemas_titulares = {
             "4-4-2": {"ARQ": 1, "DEF": 4, "VOL": 4, "DEL": 2},
