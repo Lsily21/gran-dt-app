@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import re
-import time  # <-- Importante para romper la caché de Google Sheets
+import time
 
 # --- CONFIGURACIÓN DE FECHA ---
-NUM_FECHA = 7  # Cambia este número en el futuro para actualizar toda la app
+NUM_FECHA = 6  # Cambia este número en el futuro para actualizar toda la app
 
 st.set_page_config(page_title=f"Scouting Gran DT Avanzado - Fecha {NUM_FECHA}", layout="wide")
 st.title(f"⚽ Motor de Scouting Avanzado & Armado Táctico - Fecha {NUM_FECHA}")
@@ -18,14 +18,12 @@ def clean_google_sheet_url(url):
     base_match = re.search(r'(https://docs\.google\.com/spreadsheets/d/e/[a-zA-Z0-9_-]+)', url)
     if base_match:
         base_url = base_match.group(1)
-        # Agregamos un timestamp dinámico (&t=...) para evitar que Google devuelva datos viejos (caché)
         timestamp = int(time.time())
         return f"{base_url}/pub?gid={gid}&single=true&output=csv&t={timestamp}"
     return url
 
 # --- NORMALIZACIÓN DE NOMBRES ---
 def normalizar_nombre(nombre):
-    """Convierte a mayúsculas y quita espacios extra para cruzar datos sin errores"""
     if pd.isna(nombre): return ""
     return str(nombre).strip().upper()
 
@@ -46,10 +44,10 @@ url_tabla = st.sidebar.text_input(
 )
 
 urls_jugadores = {
-    "ARQ": st.sidebar.text_input("Arqueros (ARQ):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWGNjh7CL09RS5jbryuvTL88q8AYF6yV5kJqmraLlASvJeyK6jYJlb8XulTFWOuEXwIOhHhVBu1CpY/pubhtml#gid=20"),
-    "DEF": st.sidebar.text_input("Defensores (DEF):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWGNjh7CL09RS5jbryuvTL88q8AYF6yV5kJqmraLlASvJeyK6jYJlb8XulTFWOuEXwIOhHhVBu1CpY/pubhtml#gid=19"),
-    "VOL": st.sidebar.text_input("Volantes (VOL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWGNjh7CL09RS5jbryuvTL88q8AYF6yV5kJqmraLlASvJeyK6jYJlb8XulTFWOuEXwIOhHhVBu1CpY/pubhtml#gid=18"),
-    "DEL": st.sidebar.text_input("Delanteros (DEL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWGNjh7CL09RS5jbryuvTL88q8AYF6yV5kJqmraLlASvJeyK6jYJlb8XulTFWOuEXwIOhHhVBu1CpY/pubhtml#gid=17")
+    "ARQ": st.sidebar.text_input("Arqueros (ARQ):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQar3txoFXtWCNwPoWL_2_z7ehHwxJmgFWEIIKoILxig9a7z8i3RxmbjLt8ioO_0PA5hbu_hIRHW-VW/pubhtml#gid=20"),
+    "DEF": st.sidebar.text_input("Defensores (DEF):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQar3txoFXtWCNwPoWL_2_z7ehHwxJmgFWEIIKoILxig9a7z8i3RxmbjLt8ioO_0PA5hbu_hIRHW-VW/pubhtml#gid=19"),
+    "VOL": st.sidebar.text_input("Volantes (VOL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQar3txoFXtWCNwPoWL_2_z7ehHwxJmgFWEIIKoILxig9a7z8i3RxmbjLt8ioO_0PA5hbu_hIRHW-VW/pubhtml#gid=18"),
+    "DEL": st.sidebar.text_input("Delanteros (DEL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQar3txoFXtWCNwPoWL_2_z7ehHwxJmgFWEIIKoILxig9a7z8i3RxmbjLt8ioO_0PA5hbu_hIRHW-VW/pubhtml#gid=17")
 }
 
 def load_data(url):
@@ -58,12 +56,16 @@ def load_data(url):
     try:
         df_raw = pd.read_csv(csv_url, header=None, dtype=str, on_bad_lines='skip')
         header_idx = None
+        
+        # Búsqueda estricta de la fila de encabezados
         for idx, row in df_raw.iterrows():
             row_str = row.astype(str).str.lower().values
             if any('jugador' in val for val in row_str if pd.notna(val)):
                 header_idx = idx
                 break
+                
         if header_idx is not None:
+            # Toma los datos estrictamente debajo de la fila de encabezado encontrada
             df = pd.DataFrame(df_raw.values[header_idx+1:], columns=df_raw.iloc[header_idx])
         else:
             df = df_raw
@@ -87,10 +89,7 @@ def procesar_fixture(url):
         if len(vals) >= 2:
             eq_local = vals[0]
             eq_visita = vals[1]
-            
-            # Para el equipo local, el rival es el visitante (V)
             mapping_list.append({'Equipo': eq_local, 'Rival_Nombre': eq_visita, 'Condicion': 'V'})
-            # Para el equipo visitante, el rival es el local (L)
             mapping_list.append({'Equipo': eq_visita, 'Rival_Nombre': eq_local, 'Condicion': 'L'})
             
     res_df = pd.DataFrame(mapping_list)
@@ -176,6 +175,10 @@ def procesar_jugadores(url, pos):
         if c_low in ['act', 'prt'] or c_low.startswith('f'):
             res[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
             
+    # Limpieza estricta: Eliminar filas donde el nombre del jugador esté vacío o sea 'nan'
+    res = res[~res['Jugador'].str.lower().isin(['nan', 'none', ''])]
+    res = res.dropna(subset=['Jugador'])
+            
     return res
 
 if st.button("🚀 Procesar Datos y Actualizar Scouting"):
@@ -200,14 +203,11 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
 
     df_full = pd.concat(lista_jugadores, ignore_index=True)
     
-    # Normalizar llaves para el cruce
     df_fix['Equipo_key'] = df_fix['Equipo'].apply(normalizar_nombre)
     df_full['Equipo_key'] = df_full['Equipo'].apply(normalizar_nombre)
     
-    # Cruce del Fixture
     df_full = df_full.merge(df_fix[['Equipo_key', 'Rival_Nombre', 'Condicion']], on='Equipo_key', how='left')
     
-    # Formatear la columna visible 'Rival' para agregar (L) o (V)
     def formatear_rival(row):
         r_nombre = row.get('Rival_Nombre')
         if pd.isna(r_nombre): return 'Libre / S/D'
@@ -217,7 +217,6 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
 
     df_full['Rival'] = df_full.apply(formatear_rival, axis=1)
     
-    # Crear llave limpia para cruzar con la tabla de posiciones (sin L/V)
     df_full['Rival_Nombre'] = df_full['Rival_Nombre'].fillna('Libre / S/D')
     df_full['Rival_key'] = df_full['Rival_Nombre'].apply(normalizar_nombre)
     
@@ -229,7 +228,6 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
         'GC': 'Rival_GC'
     })
     
-    # Cruce de Posiciones
     df_full = df_full.merge(df_tab_rival, on='Rival_key', how='left')
     
     for c in ['Rival_Pts', 'Rival_GF', 'Rival_GC']:
@@ -239,7 +237,6 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
     if 'AcT' not in df_full.columns: df_full['AcT'] = 0.0
     if 'PrT' not in df_full.columns: df_full['PrT'] = 0.0
 
-    # Orden general inicial por puntaje
     df_full = df_full.sort_values(by=['AcT', 'PrT'], ascending=[False, False]).reset_index(drop=True)
     st.session_state['df_full'] = df_full
     st.success(f"¡Datos actualizados correctamente a la Fecha {NUM_FECHA}!")
@@ -247,7 +244,6 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
 if 'df_full' in st.session_state:
     df_full = st.session_state['df_full']
 
-    # --- PESTAÑAS (TABS) ACTUALIZADAS ---
     tabs = st.tabs([
         f"👕 Plantel Ideal (Normal)", 
         f"⚡ Equipo Potenciado (Estratégico)", 
@@ -299,19 +295,24 @@ if 'df_full' in st.session_state:
     # --- TAB 1: EQUIPO POTENCIADO (ESTRATÉGICO) ---
     with tabs[1]:
         st.subheader(f"⚡ Equipo Potenciado (Análisis de Rival) - Esquema: {esquema_elegido}")
+        st.markdown("*🔥 **Filtro Aplicado:** Solo se consideran jugadores con **Promedio (PrT) ≥ 8**.*")
         st.markdown("*🎯 **ARQ/DEF**: Busca rivales que hacen pocos goles. **VOL/DEL**: Busca rivales que reciben muchos goles.*")
+        
+        # Filtramos la base de datos entera SOLO para jugadores con PrT >= 8
+        df_potenciado_base = df_full[df_full['PrT'] >= 8].copy()
         
         titulares_pot, suplentes_pot, used_indices_pot = [], [], []
         
         for p_pos, cant in req.items():
-            df_pos_pot = df_full[df_full['Pos'] == p_pos].copy()
+            df_pos_pot = df_potenciado_base[df_potenciado_base['Pos'] == p_pos].copy()
             
-            # Lógica Estratégica:
+            # Si no hay suficientes jugadores para la posición, mandamos un aviso
+            if len(df_pos_pot) < cant:
+                st.warning(f"⚠️ Atención: Solo se encontraron {len(df_pos_pot)} jugadores en la posición {p_pos} con Promedio ≥ 8. Se mostrarán los disponibles.")
+            
             if p_pos in ["ARQ", "DEF"]:
-                # ARQ y DEF: Rivales con menos Goles a Favor (ascendente)
                 df_pos_pot = df_pos_pot.sort_values(by=['Rival_GF', 'AcT', 'PrT'], ascending=[True, False, False])
             else:
-                # VOL y DEL: Rivales con más Goles en Contra (descendente)
                 df_pos_pot = df_pos_pot.sort_values(by=['Rival_GC', 'AcT', 'PrT'], ascending=[False, False, False])
 
             tits = df_pos_pot.head(cant)
