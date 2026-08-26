@@ -4,7 +4,7 @@ import re
 import time 
 
 # --- CONFIGURACIÓN DE FECHA ---
-NUM_FECHA = 6  
+NUM_FECHA = 7  
 
 st.set_page_config(page_title=f"Scouting Gran DT Avanzado - Fecha {NUM_FECHA}", layout="wide")
 st.title(f"⚽ Motor de Scouting Avanzado & Armado Táctico - Fecha {NUM_FECHA}")
