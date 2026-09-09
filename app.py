@@ -4,7 +4,7 @@ import re
 import time
 
 # --- CONFIGURACIÓN DE FECHA ---
-NUM_FECHA = 8  # Cambia este número en el futuro para actualizar toda la app
+NUM_FECHA = 9  # Cambia este número en el futuro para actualizar toda la app
 
 st.set_page_config(page_title=f"Scouting Gran DT Avanzado - Fecha {NUM_FECHA}", layout="wide")
 st.title(f"⚽ Motor de Scouting Avanzado & Armado Táctico - Fecha {NUM_FECHA}")
@@ -44,10 +44,10 @@ url_tabla = st.sidebar.text_input(
 )
 
 urls_jugadores = {
-    "ARQ": st.sidebar.text_input("Arqueros (ARQ):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUnWA7eYlnlhVDpfYVCfOXJo5ivL084sAtZOX8z51MSru3mjo7EjrAHWcAyyxdaSwchWXT9_lMozZe/pubhtml#gid=20"),
-    "DEF": st.sidebar.text_input("Defensores (DEF):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUnWA7eYlnlhVDpfYVCfOXJo5ivL084sAtZOX8z51MSru3mjo7EjrAHWcAyyxdaSwchWXT9_lMozZe/pubhtml#gid=19"),
-    "VOL": st.sidebar.text_input("Volantes (VOL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUnWA7eYlnlhVDpfYVCfOXJo5ivL084sAtZOX8z51MSru3mjo7EjrAHWcAyyxdaSwchWXT9_lMozZe/pubhtml#gid=18"),
-    "DEL": st.sidebar.text_input("Delanteros (DEL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUnWA7eYlnlhVDpfYVCfOXJo5ivL084sAtZOX8z51MSru3mjo7EjrAHWcAyyxdaSwchWXT9_lMozZe/pubhtml#gid=17")
+    "ARQ": st.sidebar.text_input("Arqueros (ARQ):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKYjnioPob8f3-Gnt6I1_mjOlqCILKTpAQKp6QxFVNGF-2uxSg3qXve9j934hXHh9jj8lWkGy0Qj_0/pubhtml#gid=20"),
+    "DEF": st.sidebar.text_input("Defensores (DEF):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKYjnioPob8f3-Gnt6I1_mjOlqCILKTpAQKp6QxFVNGF-2uxSg3qXve9j934hXHh9jj8lWkGy0Qj_0/pubhtml#gid=19"),
+    "VOL": st.sidebar.text_input("Volantes (VOL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKYjnioPob8f3-Gnt6I1_mjOlqCILKTpAQKp6QxFVNGF-2uxSg3qXve9j934hXHh9jj8lWkGy0Qj_0/pubhtml#gid=18"),
+    "DEL": st.sidebar.text_input("Delanteros (DEL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKYjnioPob8f3-Gnt6I1_mjOlqCILKTpAQKp6QxFVNGF-2uxSg3qXve9j934hXHh9jj8lWkGy0Qj_0/pubhtml#gid=17")
 }
 
 def load_data(url):
