@@ -9,6 +9,27 @@ NUM_FECHA = 10  # Cambia este número en el futuro para actualizar toda la app
 st.set_page_config(page_title=f"Scouting Gran DT Avanzado - Fecha {NUM_FECHA}", layout="wide")
 st.title(f"⚽ Motor de Scouting Avanzado & Armado Táctico - Fecha {NUM_FECHA}")
 
+# --- FUNCIÓN DE ESTILIZADO (COLORES Y FORMATOS) ---
+def aplicar_colores(val):
+    try:
+        score = float(val)
+        if score < 3: return 'background-color: #FF9999'  # Rojo
+        if 10 <= score <= 19: return 'background-color: #ADD8E6'  # Celeste
+        if 20 <= score <= 29: return 'background-color: #90EE90'  # Verde
+        if score >= 30: return 'background-color: #FFFF99'  # Amarillo
+        return '' 
+    except:
+        return ''
+
+def estilizar_dataframe(df):
+    fecha_cols = [c for c in df.columns if c.lower().startswith('f')]
+    format_dict = {col: "{:.0f}" for col in fecha_cols if col in df.columns}
+    
+    if 'AcT' in df.columns: format_dict['AcT'] = "{:.0f}"
+    if 'PrT' in df.columns: format_dict['PrT'] = "{:g}" # {:g} elimina ceros de más a la derecha
+        
+    return df.style.map(aplicar_colores, subset=fecha_cols).format(format_dict, na_rep="0")
+
 # --- FUNCIONES DE LIMPIEZA DE URLs Y ANTI-CACHÉ ---
 def clean_google_sheet_url(url):
     if not url: return ""
