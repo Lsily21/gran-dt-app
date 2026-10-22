@@ -65,10 +65,10 @@ url_tabla = st.sidebar.text_input(
 )
 
 urls_jugadores = {
-    "ARQ": st.sidebar.text_input("Arqueros (ARQ):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTsGBMdioZJc0Zu3Lx8Vn275JoyaCrthXs1YjIrrGkaSEkiKWSkzNHq1QoBmcK2Po_WoT6UTSQor-uU/pubhtml#gid=20"),
-    "DEF": st.sidebar.text_input("Defensores (DEF):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTsGBMdioZJc0Zu3Lx8Vn275JoyaCrthXs1YjIrrGkaSEkiKWSkzNHq1QoBmcK2Po_WoT6UTSQor-uU/pubhtml#gid=19"),
-    "VOL": st.sidebar.text_input("Volantes (VOL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTsGBMdioZJc0Zu3Lx8Vn275JoyaCrthXs1YjIrrGkaSEkiKWSkzNHq1QoBmcK2Po_WoT6UTSQor-uU/pubhtml#gid=18"),
-    "DEL": st.sidebar.text_input("Delanteros (DEL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTsGBMdioZJc0Zu3Lx8Vn275JoyaCrthXs1YjIrrGkaSEkiKWSkzNHq1QoBmcK2Po_WoT6UTSQor-uU/pubhtml#gid=17")
+    "ARQ": st.sidebar.text_input("Arqueros (ARQ):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoCo35Xv22hywKVgxnpH55TVsS5mQIFKUgtL0J-mzSRzSuKnmu0nmj_-AIMPjmI0S8i04I5jvuNvOF/pubhtml#gid=20"),
+    "DEF": st.sidebar.text_input("Defensores (DEF):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoCo35Xv22hywKVgxnpH55TVsS5mQIFKUgtL0J-mzSRzSuKnmu0nmj_-AIMPjmI0S8i04I5jvuNvOF/pubhtml#gid=19"),
+    "VOL": st.sidebar.text_input("Volantes (VOL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoCo35Xv22hywKVgxnpH55TVsS5mQIFKUgtL0J-mzSRzSuKnmu0nmj_-AIMPjmI0S8i04I5jvuNvOF/pubhtml#gid=18"),
+    "DEL": st.sidebar.text_input("Delanteros (DEL):", "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoCo35Xv22hywKVgxnpH55TVsS5mQIFKUgtL0J-mzSRzSuKnmu0nmj_-AIMPjmI0S8i04I5jvuNvOF/pubhtml#gid=17")
 }
 
 def load_data(url):
