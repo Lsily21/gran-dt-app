@@ -17,17 +17,17 @@ def aplicar_colores(val):
         if 10 <= score <= 19: return 'background-color: #ADD8E6'  # Celeste
         if 20 <= score <= 29: return 'background-color: #90EE90'  # Verde
         if score >= 30: return 'background-color: #FFFF99'  # Amarillo
-        return '' 
+        return ''
     except:
         return ''
 
 def estilizar_dataframe(df):
     fecha_cols = [c for c in df.columns if c.lower().startswith('f')]
     format_dict = {col: "{:.0f}" for col in fecha_cols if col in df.columns}
-    
+
     if 'AcT' in df.columns: format_dict['AcT'] = "{:.0f}"
     if 'PrT' in df.columns: format_dict['PrT'] = "{:g}" # {:g} elimina ceros de más a la derecha
-        
+
     return df.style.map(aplicar_colores, subset=fecha_cols).format(format_dict, na_rep="0")
 
 # --- FUNCIONES DE LIMPIEZA DE URLs Y ANTI-CACHÉ ---
@@ -56,11 +56,11 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("**Links de Google Sheets:**")
 
 url_fixture = st.sidebar.text_input(
-    "Link Fixture:", 
+    "Link Fixture:",
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQh0cVFkWwvHhhrewSl31ZX7KxRv0J_zrzpoM22WuyFjqwvDyjJSf3Xt7YP1UnJ5T3JcvrEIqE0Toi4/pub?gid=0&single=true&output=csv"
 )
 url_tabla = st.sidebar.text_input(
-    "Link Tabla de Posiciones:", 
+    "Link Tabla de Posiciones:",
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQxZJazI4lUl904RplZTchotOdiCGtZUOGYWIEoGCue0iAUC3RzWVZVshOYwBv-6N9Z8U98gvq4NeS1/pub?gid=0&single=true&output=csv"
 )
 
@@ -77,20 +77,20 @@ def load_data(url):
     try:
         df_raw = pd.read_csv(csv_url, header=None, dtype=str, on_bad_lines='skip')
         header_idx = None
-        
+
         # Búsqueda estricta de la fila de encabezados
         for idx, row in df_raw.iterrows():
             row_str = row.astype(str).str.lower().values
             if any('jugador' in val for val in row_str if pd.notna(val)):
                 header_idx = idx
                 break
-                
+
         if header_idx is not None:
             # Toma los datos estrictamente debajo de la fila de encabezado encontrada
             df = pd.DataFrame(df_raw.values[header_idx+1:], columns=df_raw.iloc[header_idx])
         else:
             df = df_raw
-            
+
         df.columns = [str(c).strip() if pd.notna(c) else f"Col_{i}" for i, c in enumerate(df.columns)]
         df = df.loc[:, ~df.columns.str.contains('^Unnamed|^nan|^Col_', na=False, case=False)]
         return df
@@ -112,7 +112,7 @@ def procesar_fixture(url):
             eq_visita = vals[1]
             mapping_list.append({'Equipo': eq_local, 'Rival_Nombre': eq_visita, 'Condicion': 'V'})
             mapping_list.append({'Equipo': eq_visita, 'Rival_Nombre': eq_local, 'Condicion': 'L'})
-            
+
     res_df = pd.DataFrame(mapping_list)
     return res_df
 
@@ -126,11 +126,11 @@ def procesar_tabla_posiciones(url):
     res_data = []
     col_eq = -1
     col_pts = -1
-    
+
     for idx, row in df_raw.iterrows():
         row_str = [str(x).strip().upper() for x in row.values]
         row_orig = [str(x).strip() for x in row.values]
-        
+
         if any('EQUIPO' in val or 'CLUB' in val for val in row_str):
             for i, val in enumerate(row_str):
                 if 'EQUIPO' in val or 'CLUB' in val:
@@ -138,12 +138,12 @@ def procesar_tabla_posiciones(url):
                 elif 'PTS' in val or 'PUNTOS' in val:
                     col_pts = i
             continue
-        
+
         if col_eq != -1 and col_eq < len(row_orig):
             eq_name = row_orig[col_eq]
             if not eq_name or eq_name.upper() in ['NAN', 'NONE', '']:
                 continue
-            
+
             pts_val = 0
             if col_pts != -1 and col_pts < len(row_orig):
                 pts_str = row_orig[col_pts]
@@ -151,7 +151,7 @@ def procesar_tabla_posiciones(url):
                     pts_val = int(''.join(filter(str.isdigit, pts_str)))
                 except:
                     pts_val = 0
-            
+
             gf, gc = 0, 0
             for cell in row_orig:
                 if ':' in cell:
@@ -163,43 +163,43 @@ def procesar_tabla_posiciones(url):
                                 gc = int(''.join(filter(str.isdigit, parts[1])))
                             except:
                                 pass
-                        break 
-            
+                        break
+
             res_data.append({
-                'Equipo': eq_name, 
-                'Pts': pts_val, 
-                'GF': gf, 
+                'Equipo': eq_name,
+                'Pts': pts_val,
+                'GF': gf,
                 'GC': gc
             })
-            
+
     return pd.DataFrame(res_data)
 
 def procesar_jugadores(url, pos):
     df = load_data(url)
-    if df is None or df.empty: 
+    if df is None or df.empty:
         st.warning(f"⚠️ No se encontraron datos para **{pos}**.")
         return pd.DataFrame()
-    
+
     col_j = next((c for c in df.columns if 'jugador' in c.lower()), df.columns[0] if len(df.columns) > 0 else None)
     col_e = next((c for c in df.columns if 'equipo' in c.lower() or 'club' in c.lower()), df.columns[2] if len(df.columns) > 2 else None)
-    
-    if not col_j or not col_e: 
+
+    if not col_j or not col_e:
         return pd.DataFrame()
-    
+
     res = pd.DataFrame()
     res['Jugador'] = df[col_j].astype(str).str.strip()
     res['Equipo'] = df[col_e].astype(str).str.strip()
     res['Pos'] = pos
-    
+
     for col in df.columns:
         c_low = col.lower()
         if c_low in ['act', 'prt'] or c_low.startswith('f'):
             res[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
-            
+
     # Limpieza estricta: Eliminar filas donde el nombre del jugador esté vacío o sea 'nan'
     res = res[~res['Jugador'].str.lower().isin(['nan', 'none', ''])]
     res = res.dropna(subset=['Jugador'])
-            
+
     return res
 
 if st.button("🚀 Procesar Datos y Actualizar Scouting"):
@@ -223,12 +223,20 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
         st.stop()
 
     df_full = pd.concat(lista_jugadores, ignore_index=True)
-    
+
     df_fix['Equipo_key'] = df_fix['Equipo'].apply(normalizar_nombre)
     df_full['Equipo_key'] = df_full['Equipo'].apply(normalizar_nombre)
-    
+
+    # Mostrar únicamente jugadores cuyos equipos aparecen en el fixture
+    equipos_fixture = set(df_fix['Equipo_key'].dropna())
+    df_full = df_full[df_full['Equipo_key'].isin(equipos_fixture)].copy()
+
+    if df_full.empty:
+        st.error("No se encontraron jugadores de los equipos incluidos en el fixture.")
+        st.stop()
+
     df_full = df_full.merge(df_fix[['Equipo_key', 'Rival_Nombre', 'Condicion']], on='Equipo_key', how='left')
-    
+
     def formatear_rival(row):
         r_nombre = row.get('Rival_Nombre')
         if pd.isna(r_nombre): return 'Libre / S/D'
@@ -237,10 +245,10 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
         return f"{r_nombre}({cond})"
 
     df_full['Rival'] = df_full.apply(formatear_rival, axis=1)
-    
+
     df_full['Rival_Nombre'] = df_full['Rival_Nombre'].fillna('Libre / S/D')
     df_full['Rival_key'] = df_full['Rival_Nombre'].apply(normalizar_nombre)
-    
+
     df_tab['Equipo_key'] = df_tab['Equipo'].apply(normalizar_nombre)
     df_tab_rival = df_tab[['Equipo_key', 'Pts', 'GF', 'GC']].rename(columns={
         'Equipo_key': 'Rival_key',
@@ -248,12 +256,12 @@ if st.button("🚀 Procesar Datos y Actualizar Scouting"):
         'GF': 'Rival_GF',
         'GC': 'Rival_GC'
     })
-    
+
     df_full = df_full.merge(df_tab_rival, on='Rival_key', how='left')
-    
+
     for c in ['Rival_Pts', 'Rival_GF', 'Rival_GC']:
         if c in df_full.columns:
-            df_full[c] = df_full[c].fillna(0).astype(int) 
+            df_full[c] = df_full[c].fillna(0).astype(int)
 
     if 'AcT' not in df_full.columns: df_full['AcT'] = 0.0
     if 'PrT' not in df_full.columns: df_full['PrT'] = 0.0
@@ -266,11 +274,11 @@ if 'df_full' in st.session_state:
     df_full = st.session_state['df_full']
 
     tabs = st.tabs([
-        f"👕 Plantel Ideal (Normal)", 
-        f"⚡ Equipo Potenciado (Estratégico)", 
-        "🧤 ARQ", 
-        "🛡️ DEF", 
-        "👟 VOL", 
+        f"👕 Plantel Ideal (Normal)",
+        f"⚡ Equipo Potenciado (Estratégico)",
+        "🧤 ARQ",
+        "🛡️ DEF",
+        "👟 VOL",
         "⚽ DEL",
         "📊 Ranking General"
     ])
@@ -288,7 +296,7 @@ if 'df_full' in st.session_state:
     # --- TAB 0: PLANTEL IDEAL CLÁSICO ---
     with tabs[0]:
         st.subheader(f"Plantel Ideal Clásico (Por Puntaje) - Esquema: {esquema_elegido}")
-        
+
         titulares_dfs, suplentes_dfs, used_indices = [], [], []
         for p_pos, cant in req.items():
             df_pos = df_full[df_full['Pos'] == p_pos].sort_values(by=['AcT', 'PrT'], ascending=[False, False])
@@ -297,7 +305,7 @@ if 'df_full' in st.session_state:
             tits = tits.copy()
             tits['Condición'] = 'Titular'
             titulares_dfs.append(tits)
-            
+
             df_restantes = df_pos[~df_pos.index.isin(used_indices)]
             sups = df_restantes.head(1)
             if not sups.empty:
@@ -305,7 +313,7 @@ if 'df_full' in st.session_state:
                 sups = sups.copy()
                 sups['Condición'] = 'Suplente'
                 suplentes_dfs.append(sups)
-                
+
         if titulares_dfs and suplentes_dfs:
             df_plantel = pd.concat(titulares_dfs + suplentes_dfs, ignore_index=True)
             cols_base = ['Condición', 'Jugador', 'Pos', 'Equipo', 'Rival', 'Rival_Pts', 'Rival_GF', 'Rival_GC', 'AcT', 'PrT']
@@ -318,19 +326,19 @@ if 'df_full' in st.session_state:
         st.subheader(f"⚡ Equipo Potenciado (Análisis de Rival) - Esquema: {esquema_elegido}")
         st.markdown("*🔥 **Filtro Aplicado:** Solo se consideran jugadores con **Promedio (PrT) ≥ 8**.*")
         st.markdown("*🎯 **ARQ/DEF**: Busca rivales que hacen pocos goles. **VOL/DEL**: Busca rivales que reciben muchos goles.*")
-        
+
         # Filtramos la base de datos entera SOLO para jugadores con PrT >= 8
         df_potenciado_base = df_full[df_full['PrT'] >= 8].copy()
-        
+
         titulares_pot, suplentes_pot, used_indices_pot = [], [], []
-        
+
         for p_pos, cant in req.items():
             df_pos_pot = df_potenciado_base[df_potenciado_base['Pos'] == p_pos].copy()
-            
+
             # Si no hay suficientes jugadores para la posición, mandamos un aviso
             if len(df_pos_pot) < cant:
                 st.warning(f"⚠️ Atención: Solo se encontraron {len(df_pos_pot)} jugadores en la posición {p_pos} con Promedio ≥ 8. Se mostrarán los disponibles.")
-            
+
             if p_pos in ["ARQ", "DEF"]:
                 df_pos_pot = df_pos_pot.sort_values(by=['Rival_GF', 'AcT', 'PrT'], ascending=[True, False, False])
             else:
@@ -341,7 +349,7 @@ if 'df_full' in st.session_state:
             tits = tits.copy()
             tits['Condición'] = 'Titular'
             titulares_pot.append(tits)
-            
+
             df_restantes = df_pos_pot[~df_pos_pot.index.isin(used_indices_pot)]
             sups = df_restantes.head(1)
             if not sups.empty:
@@ -349,7 +357,7 @@ if 'df_full' in st.session_state:
                 sups = sups.copy()
                 sups['Condición'] = 'Suplente'
                 suplentes_pot.append(sups)
-                
+
         if titulares_pot and suplentes_pot:
             df_plantel_pot = pd.concat(titulares_pot + suplentes_pot, ignore_index=True)
             cols_base = ['Condición', 'Jugador', 'Pos', 'Equipo', 'Rival', 'Rival_Pts', 'Rival_GF', 'Rival_GC', 'AcT', 'PrT']
